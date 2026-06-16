@@ -1,0 +1,40 @@
+steps:
+  # Build using Cloud Native Buildpacks (no Dockerfile needed for Node.js)
+  - name: 'gcr.io/k8s-skaffold/pack'
+    id: Build
+    entrypoint: pack
+    args:
+      - 'build'
+      - 'us-central1-docker.pkg.dev/udea-filosofia/cloud-run-source-deploy/prizma-mnemosyne:$COMMIT_SHA'
+      - '--builder=gcr.io/buildpacks/builder:google-22'
+      - '--network=cloudbuild'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: Push
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/udea-filosofia/cloud-run-source-deploy/prizma-mnemosyne:$COMMIT_SHA'
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: Deploy
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'services'
+      - 'update'
+      - 'prizma-mnemosyne'
+      - '--platform=managed'
+      - '--image=us-central1-docker.pkg.dev/udea-filosofia/cloud-run-source-deploy/prizma-mnemosyne:$COMMIT_SHA'
+      - '--region=us-central1'
+      - '--quiet'
+
+images:
+  - 'us-central1-docker.pkg.dev/udea-filosofia/cloud-run-source-deploy/prizma-mnemosyne:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  substitutionOption: ALLOW_LOOSE
+
+tags:
+  - prizma-mnemosyne
+  - gcp-cloud-build-deploy-cloud-run
