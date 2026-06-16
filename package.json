@@ -1,7 +1,7 @@
 {
-  "name": "api-softia",
+  "name": "mnemosyne",
   "version": "1.0.0",
-  "description": "TypeScript API for Soft-IA CRM integration with ecommerce notifications",
+  "description": "Mnemosyne — TypeScript API for Soft-IA CRM integration with ecommerce notifications",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
@@ -14,7 +14,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@olympo/contracts": "file:../../packages/contracts",
+    "prizma-contracts": "^1.3.0",
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "helmet": "^7.1.0",
