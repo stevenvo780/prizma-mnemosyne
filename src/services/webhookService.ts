@@ -1,19 +1,19 @@
 import axios from 'axios';
-import { WebhookConfirmation } from '../types/hubCentralTypes';
+import { WebhookConfirmation } from '../types/nousTypes';
 
 export class WebhookService {
-  private readonly hubCentralBaseUrl: string;
-  private readonly hubCentralApiKey: string;
+  private readonly nousBaseUrl: string;
+  private readonly nousApiKey: string;
 
   constructor() {
-    this.hubCentralBaseUrl = process.env.HUB_CENTRAL_BASE_URL || 'http://localhost:3007';
-    this.hubCentralApiKey = process.env.HUB_CENTRAL_API_KEY || 'hub-central-api-key-2024';
+    this.nousBaseUrl = process.env.HUB_CENTRAL_BASE_URL || 'http://localhost:3007';
+    this.nousApiKey = process.env.HUB_CENTRAL_API_KEY || 'nous-api-key-2024';
   }
 
   /**
    * Envía confirmación al Hub Central después de procesar un webhook
    */
-  async sendConfirmationToHubCentral(
+  async sendConfirmationToNous(
     orderId: string, 
     eventType: string, 
     result: WebhookConfirmation
@@ -22,7 +22,7 @@ export class WebhookService {
       const confirmationPayload = {
         orderId,
         eventType,
-        service: 'ApiSoftia',
+        service: 'mnemosyne',
         timestamp: new Date().toISOString(),
         result
       };
@@ -30,13 +30,13 @@ export class WebhookService {
       console.log(`📤 Enviando confirmación CRM al Hub Central: ${eventType} | Order: ${orderId}`);
 
       const response = await axios.post(
-        `${this.hubCentralBaseUrl}/api/webhooks/confirmations`,
+        `${this.nousBaseUrl}/api/webhooks/confirmations`,
         confirmationPayload,
         {
           headers: {
             'Content-Type': 'application/json',
-            'X-API-Key': this.hubCentralApiKey,
-            'User-Agent': 'ApiSoftia-Webhook-Service/1.0.0'
+            'X-API-Key': this.nousApiKey,
+            'User-Agent': 'Mnemosyne-Webhook-Service/1.0.0'
           },
           timeout: 10000 // 10 segundos timeout
         }
@@ -71,18 +71,18 @@ export class WebhookService {
   }): Promise<void> {
     try {
       const metricsPayload = {
-        service: 'ApiSoftia',
+        service: 'mnemosyne',
         ...metrics,
         timestamp: metrics.timestamp.toISOString()
       };
 
       await axios.post(
-        `${this.hubCentralBaseUrl}/api/metrics/webhooks`,
+        `${this.nousBaseUrl}/api/metrics/webhooks`,
         metricsPayload,
         {
           headers: {
             'Content-Type': 'application/json',
-            'X-API-Key': this.hubCentralApiKey
+            'X-API-Key': this.nousApiKey
           },
           timeout: 5000 // 5 segundos timeout para métricas
         }
@@ -96,13 +96,13 @@ export class WebhookService {
   /**
    * Verifica la conectividad con Hub Central
    */
-  async checkHubCentralConnectivity(): Promise<boolean> {
+  async checkNousConnectivity(): Promise<boolean> {
     try {
       const response = await axios.get(
-        `${this.hubCentralBaseUrl}/api/health`,
+        `${this.nousBaseUrl}/api/health`,
         {
           headers: {
-            'X-API-Key': this.hubCentralApiKey
+            'X-API-Key': this.nousApiKey
           },
           timeout: 5000
         }

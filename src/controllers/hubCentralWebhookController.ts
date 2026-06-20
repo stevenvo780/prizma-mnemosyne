@@ -2,29 +2,33 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { CrmSyncService } from '../services/crmSyncService';
 import { WebhookService } from '../services/webhookService';
-import { HubCentralWebhookPayload, ClientLeadData, ClientPurchaseData } from '../types/hubCentralTypes';
+import { NousWebhookPayload, ClientLeadData, ClientPurchaseData } from '../types/nousTypes';
+import { config } from '../config';
 
 const CRM_SYNC_SERVICE = new CrmSyncService();
 const WEBHOOK_SERVICE = new WebhookService();
-
-// Clave secreta para verificación HMAC (debe coincidir con Hub Central)
-const WEBHOOK_SECRET = process.env.HUB_CENTRAL_WEBHOOK_SECRET || 'hub-central-secret-key-2024';
 
 /**
  * Verifica la firma HMAC del webhook
  */
 function verifyHmacSignature(payload: string, signature: string): boolean {
   const expectedSignature = crypto
-    .createHmac('sha256', WEBHOOK_SECRET)
+    .createHmac('sha256', config.hubCentral.webhookSecret)
     .update(payload, 'utf8')
     .digest('hex');
-  
+
   const expectedSignatureWithPrefix = `sha256=${expectedSignature}`;
-  
-  return crypto.timingSafeEqual(
-    Buffer.from(expectedSignatureWithPrefix),
-    Buffer.from(signature)
-  );
+
+  // Normalizar y comparar longitudes antes de timingSafeEqual
+  // para evitar excepciones si las firmas tienen longitudes distintas
+  const expectedBuf = Buffer.from(expectedSignatureWithPrefix);
+  const receivedBuf = Buffer.from(signature || '');
+
+  if (expectedBuf.length !== receivedBuf.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expectedBuf, receivedBuf);
 }
 
 /**
@@ -36,7 +40,7 @@ function verifyHmacSignature(payload: string, signature: string): boolean {
  * - client_feedback_received: Feedback del cliente recibido
  * - client_support_ticket: Ticket de soporte creado
  */
-export const handleHubCentralWebhook = async (req: Request, res: Response): Promise<void> => {
+export const handleNousWebhook = async (req: Request, res: Response): Promise<void> => {
   const startTime = Date.now();
   
   try {
@@ -61,7 +65,7 @@ export const handleHubCentralWebhook = async (req: Request, res: Response): Prom
       return;
     }
 
-    const payload: HubCentralWebhookPayload = req.body;
+    const payload: NousWebhookPayload = req.body;
     
     console.log(`📨 CRM Webhook received: ${payload.eventType} | Order: ${payload.orderId}`);
 
@@ -112,7 +116,7 @@ export const handleHubCentralWebhook = async (req: Request, res: Response): Prom
     // Enviar confirmación asíncrona al Hub Central
     setImmediate(async () => {
       try {
-        await WEBHOOK_SERVICE.sendConfirmationToHubCentral(payload.orderId, payload.eventType, {
+        await WEBHOOK_SERVICE.sendConfirmationToNous(payload.orderId, payload.eventType, {
           success: true,
           crmRecordId: result.crmRecordId,
           clientStatus: result.clientStatus,
@@ -137,8 +141,11 @@ export const handleHubCentralWebhook = async (req: Request, res: Response): Prom
     // Enviar confirmación de error al Hub Central
     setImmediate(async () => {
       try {
-        const payload: HubCentralWebhookPayload = req.body;
-        await WEBHOOK_SERVICE.sendConfirmationToHubCentral(payload.orderId, payload.eventType, {
+        const payload: NousWebhookPayload = req.body;
+        // Usar valores por defecto si el payload está incompleto
+        const orderId = payload?.orderId ?? 'unknown';
+        const eventType = payload?.eventType ?? 'unknown';
+        await WEBHOOK_SERVICE.sendConfirmationToNous(orderId, eventType, {
           success: false,
           error: error.message,
           processingTime
@@ -159,7 +166,7 @@ export const handleHubCentralWebhook = async (req: Request, res: Response): Prom
 /**
  * Procesa evento de nuevo lead creado
  */
-async function processClientLeadCreated(payload: HubCentralWebhookPayload) {
+async function processClientLeadCreated(payload: NousWebhookPayload) {
   const leadData: ClientLeadData = {
     email: payload.clientData.email,
     name: payload.clientData.name || 'Lead desde eCommerce',
@@ -179,7 +186,7 @@ async function processClientLeadCreated(payload: HubCentralWebhookPayload) {
 /**
  * Procesa evento de compra completada
  */
-async function processClientPurchaseCompleted(payload: HubCentralWebhookPayload) {
+async function processClientPurchaseCompleted(payload: NousWebhookPayload) {
   const purchaseData: ClientPurchaseData = {
     email: payload.clientData.email,
     name: payload.clientData.name || 'Cliente eCommerce',
@@ -202,7 +209,7 @@ async function processClientPurchaseCompleted(payload: HubCentralWebhookPayload)
 /**
  * Procesa evento de entrega confirmada
  */
-async function processClientDeliveryConfirmed(payload: HubCentralWebhookPayload) {
+async function processClientDeliveryConfirmed(payload: NousWebhookPayload) {
   const result = await CRM_SYNC_SERVICE.updateClientDeliveryStatus(
     payload.clientData.email,
     payload.orderId,
@@ -217,26 +224,32 @@ async function processClientDeliveryConfirmed(payload: HubCentralWebhookPayload)
 /**
  * Procesa evento de feedback recibido
  */
-async function processClientFeedbackReceived(payload: HubCentralWebhookPayload) {
+async function processClientFeedbackReceived(payload: NousWebhookPayload) {
+  // Validar datos minimos del feedback
+  const rating = payload.metadata?.rating;
+  if (rating === undefined || rating === null || typeof rating !== 'number' || rating < 1 || rating > 5) {
+    throw new Error(`Invalid feedback rating: must be a number between 1 and 5, got ${rating}`);
+  }
+
   const feedbackData = {
     email: payload.clientData.email,
     orderId: payload.orderId,
-    rating: payload.metadata?.rating || 0,
+    rating,
     comment: payload.metadata?.comment || '',
     feedbackDate: new Date()
   };
 
   const result = await CRM_SYNC_SERVICE.recordClientFeedback(feedbackData);
-  
+
   console.log(`⭐ Feedback registrado en CRM: ${result.crmRecordId} | Rating: ${feedbackData.rating}`);
-  
+
   return result;
 }
 
 /**
  * Procesa evento de ticket de soporte
  */
-async function processClientSupportTicket(payload: HubCentralWebhookPayload) {
+async function processClientSupportTicket(payload: NousWebhookPayload) {
   const ticketData = {
     email: payload.clientData.email,
     orderId: payload.orderId,
@@ -259,12 +272,12 @@ async function processClientSupportTicket(payload: HubCentralWebhookPayload) {
 export const healthCheck = (_req: Request, res: Response): void => {
   res.json({
     success: true,
-    service: 'ApiSoftia CRM Webhooks',
+    service: 'Mnemosyne CRM Webhooks',
     status: 'operational',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
     endpoints: {
-      webhook: '/api/webhooks/hub-central',
+      webhook: '/api/webhooks/nous',
       health: '/api/webhooks/health'
     }
   });

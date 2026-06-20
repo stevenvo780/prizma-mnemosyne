@@ -22,21 +22,21 @@ export enum ClientStatus {
 export interface CreateClientRequest {
   name: string;
   email: string;
-  phone?: string;
-  company?: string;
-  status?: ClientStatus;
-  tags?: string[];
-  customFields?: Record<string, any>;
+  phone?: string | undefined;
+  company?: string | undefined;
+  status?: ClientStatus | undefined;
+  tags?: string[] | undefined;
+  customFields?: Record<string, any> | undefined;
 }
 
 export interface UpdateClientRequest {
-  name?: string;
-  email?: string;
-  phone?: string;
-  company?: string;
-  status?: ClientStatus;
-  tags?: string[];
-  customFields?: Record<string, any>;
+  name?: string | undefined;
+  email?: string | undefined;
+  phone?: string | undefined;
+  company?: string | undefined;
+  status?: ClientStatus | undefined;
+  tags?: string[] | undefined;
+  customFields?: Record<string, any> | undefined;
 }
 
 export interface ClientTag {
@@ -49,7 +49,7 @@ export interface ClientTag {
 export interface EcommerceEvent {
   eventType: 'order_created' | 'order_completed' | 'order_cancelled' | 'cart_abandoned' | 'customer_registered';
   clientEmail: string;
-  clientId?: string;
+  clientId?: string | undefined;
   orderData?: {
     orderId: string;
     total: number;
@@ -60,7 +60,7 @@ export interface EcommerceEvent {
       quantity: number;
       price: number;
     }>;
-  };
+  } | undefined;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, any> | undefined;
 }

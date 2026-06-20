@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { handleHubCentralWebhook, healthCheck } from './controllers/hubCentralWebhookController';
+import { handleNousWebhook, healthCheck } from './controllers/hubCentralWebhookController';
 
 const app = express();
 const PORT = process.env.PORT || 3005;
@@ -10,9 +10,9 @@ app.use(express.json({ limit: '10mb' }));
 
 // Health check
 app.get('/health', (_req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'ApiSoftia CRM API is healthy',
+  res.json({
+    success: true,
+    message: 'Mnemosyne CRM API is healthy',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
     port: PORT
@@ -20,7 +20,7 @@ app.get('/health', (_req, res) => {
 });
 
 // Webhook endpoints
-app.post('/api/webhooks/hub-central', handleHubCentralWebhook);
+app.post('/api/webhooks/nous', handleNousWebhook);
 app.get('/api/webhooks/crm/health', healthCheck);
 
 // 404 handler
@@ -35,9 +35,9 @@ app.use((error: any, _req: express.Request, res: express.Response, _next: expres
 });
 
 const server = app.listen(PORT, () => {
-  console.log(`🚀 ApiSoftia CRM API running on port ${PORT}`);
+  console.log(`🚀 Mnemosyne CRM API running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Webhook endpoint: POST /api/webhooks/hub-central`);
+  console.log(`🔗 Webhook endpoint: POST /api/webhooks/nous`);
   console.log(`❤️ Health check: GET /health`);
 });
 

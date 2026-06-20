@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Test de integración para ApiSoftia CRM Webhooks
+# Test de integración para Mnemosyne CRM Webhooks
 # Este script verifica que la integración con Hub Central funcione correctamente
 
-echo "🧪 Iniciando tests de integración ApiSoftia CRM..."
+echo "🧪 Iniciando tests de integración Mnemosyne CRM..."
 
 API_BASE_URL="http://localhost:3005"
 HUB_CENTRAL_URL="http://localhost:3007"
@@ -74,7 +74,7 @@ response=$(curl -s -w "%{http_code}" -X POST \
     }
   }' \
   -o /tmp/no_signature_response.json \
-  "$API_BASE_URL/api/webhooks/hub-central")
+  "$API_BASE_URL/api/webhooks/nous")
 http_code="${response: -3}"
 
 if [ "$http_code" -eq 401 ]; then
@@ -97,7 +97,7 @@ response=$(curl -s -w "%{http_code}" -X POST \
     }
   }' \
   -o /tmp/invalid_signature_response.json \
-  "$API_BASE_URL/api/webhooks/hub-central")
+  "$API_BASE_URL/api/webhooks/nous")
 http_code="${response: -3}"
 
 if [ "$http_code" -eq 401 ]; then
@@ -112,7 +112,7 @@ echo "👤 3. Testing eventos de lead..."
 # Función para generar firma HMAC válida
 generate_hmac() {
   local payload="$1"
-  local secret="hub-central-secret-key-2024"
+  local secret="nous-secret-key-2024"
   echo -n "$payload" | openssl dgst -sha256 -hmac "$secret" | sed 's/^.* //'
 }
 
@@ -139,7 +139,7 @@ response=$(curl -s -w "%{http_code}" -X POST \
   -H "X-Hub-Signature-256: $signature" \
   -d "$payload" \
   -o /tmp/lead_create_response.json \
-  "$API_BASE_URL/api/webhooks/hub-central")
+  "$API_BASE_URL/api/webhooks/nous")
 http_code="${response: -3}"
 
 if [ "$http_code" -eq 200 ]; then
@@ -190,7 +190,7 @@ response=$(curl -s -w "%{http_code}" -X POST \
   -H "X-Hub-Signature-256: $signature" \
   -d "$payload" \
   -o /tmp/purchase_response.json \
-  "$API_BASE_URL/api/webhooks/hub-central")
+  "$API_BASE_URL/api/webhooks/nous")
 http_code="${response: -3}"
 
 if [ "$http_code" -eq 200 ]; then
@@ -228,7 +228,7 @@ response=$(curl -s -w "%{http_code}" -X POST \
   -H "X-Hub-Signature-256: $signature" \
   -d "$payload" \
   -o /tmp/delivery_response.json \
-  "$API_BASE_URL/api/webhooks/hub-central")
+  "$API_BASE_URL/api/webhooks/nous")
 http_code="${response: -3}"
 
 if [ "$http_code" -eq 200 ]; then
@@ -267,7 +267,7 @@ response=$(curl -s -w "%{http_code}" -X POST \
   -H "X-Hub-Signature-256: $signature" \
   -d "$payload" \
   -o /tmp/feedback_response.json \
-  "$API_BASE_URL/api/webhooks/hub-central")
+  "$API_BASE_URL/api/webhooks/nous")
 http_code="${response: -3}"
 
 if [ "$http_code" -eq 200 ]; then
@@ -307,7 +307,7 @@ response=$(curl -s -w "%{http_code}" -X POST \
   -H "X-Hub-Signature-256: $signature" \
   -d "$payload" \
   -o /tmp/support_response.json \
-  "$API_BASE_URL/api/webhooks/hub-central")
+  "$API_BASE_URL/api/webhooks/nous")
 http_code="${response: -3}"
 
 if [ "$http_code" -eq 200 ]; then
@@ -332,7 +332,7 @@ response=$(curl -s -w "%{http_code}" -X POST \
   -H "X-Hub-Signature-256: $signature" \
   -d "$payload" \
   -o /tmp/invalid_payload_response.json \
-  "$API_BASE_URL/api/webhooks/hub-central")
+  "$API_BASE_URL/api/webhooks/nous")
 http_code="${response: -3}"
 
 if [ "$http_code" -eq 400 ]; then
@@ -359,7 +359,7 @@ response=$(curl -s -w "%{http_code}" -X POST \
   -H "X-Hub-Signature-256: $signature" \
   -d "$payload" \
   -o /tmp/unsupported_event_response.json \
-  "$API_BASE_URL/api/webhooks/hub-central")
+  "$API_BASE_URL/api/webhooks/nous")
 http_code="${response: -3}"
 
 if [ "$http_code" -eq 400 ]; then
@@ -377,9 +377,9 @@ rm -f /tmp/*_response.json
 echo ""
 echo "📊 Resumen de tests completado"
 echo -e "${YELLOW}Nota: Para tests completos, asegúrate de que:${NC}"
-echo -e "${YELLOW}• ApiSoftia esté ejecutándose en puerto 3005${NC}"
+echo -e "${YELLOW}• Mnemosyne esté ejecutándose en puerto 3005${NC}"
 echo -e "${YELLOW}• Hub Central esté ejecutándose en puerto 3007${NC}"
 echo -e "${YELLOW}• Las credenciales del CRM Soft-IA estén configuradas${NC}"
 
 echo ""
-echo "✅ Tests de integración ApiSoftia completados"
+echo "✅ Tests de integración Mnemosyne completados"

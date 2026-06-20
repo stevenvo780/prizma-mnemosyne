@@ -1,5 +1,5 @@
 {
-  "name": "mnemosyne",
+  "name": "prizma-mnemosyne-backend",
   "version": "1.0.0",
   "description": "Mnemosyne — TypeScript API for Soft-IA CRM integration with ecommerce notifications",
   "main": "dist/index.js",

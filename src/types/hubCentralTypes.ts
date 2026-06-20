@@ -3,7 +3,7 @@
  * Estas interfaces definen la estructura de datos para webhooks y sincronización CRM
  */
 
-export interface HubCentralWebhookPayload {
+export interface NousWebhookPayload {
   eventType: 'client_lead_created' | 'client_purchase_completed' | 'client_delivery_confirmed' | 
             'client_feedback_received' | 'client_support_ticket';
   orderId: string;

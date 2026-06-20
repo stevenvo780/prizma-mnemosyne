@@ -1,6 +1,6 @@
-# Soft-IA CRM API
+# Mnemosyne
 
-Una API en TypeScript que conecta con el CRM Soft-IA para gestionar clientes, etiquetas y estados, con integración de notificaciones de ecommerce.
+API de integración con el CRM Soft-IA (tercero) para gestionar clientes, etiquetas y estados, con notificaciones de ecommerce.
 
 ## Características
 

@@ -1,13 +1,13 @@
-# ApiSoftia - Integración Webhooks Hub Central
+# Mnemosyne - Integración Webhooks Hub Central
 
 ## Descripción
-ApiSoftia es el sistema CRM del ecosistema que procesa eventos de clientes desde el Hub Central para sincronizar datos y gestionar el ciclo de vida de los clientes.
+Mnemosyne es el servicio de integración CRM del ecosistema Prizma que procesa eventos de clientes desde el Hub Central (Nous) para sincronizar datos hacia el CRM Soft-IA y gestionar el ciclo de vida de los clientes.
 
 ## Arquitectura de Integración
 
 ### Flujo de Datos
 ```
-Graf eCommerce → Hub Central → ApiSoftia CRM
+Hermes eCommerce → Hub Central (Nous) → Mnemosyne → Soft-IA CRM
                     ↓
             Confirmaciones asíncronas
 ```
@@ -164,19 +164,19 @@ Graf eCommerce → Hub Central → ApiSoftia CRM
 PORT=3005
 NODE_ENV=production
 
-# Soft-IA CRM API
+# Soft-IA CRM (tercero) — vía Mnemosyne
 SOFT_IA_BASE_URL=https://api.soft-ia.com
 SOFT_IA_API_KEY=your_api_key_here
 SOFT_IA_API_SECRET=your_api_secret_here
 
 # Hub Central Integration
 HUB_CENTRAL_BASE_URL=http://localhost:3007
-HUB_CENTRAL_API_KEY=hub-central-api-key-2024
-HUB_CENTRAL_WEBHOOK_SECRET=hub-central-secret-key-2024
+HUB_CENTRAL_API_KEY=nous-api-key-2024
+HUB_CENTRAL_WEBHOOK_SECRET=nous-secret-key-2024
 ```
 
 ### Endpoint de Webhook
-**URL**: `POST /api/webhooks/hub-central`
+**URL**: `POST /api/webhooks/nous`
 **Puerto**: 3005
 **Autenticación**: HMAC-SHA256 signature
 **Header**: `X-Hub-Signature-256: sha256={signature}`
@@ -262,7 +262,7 @@ Formulario  Interacción  Compra  Sin actividad
 {
   "orderId": "order-67890",
   "eventType": "client_purchase_completed",
-  "service": "ApiSoftia",
+  "service": "Mnemosyne",
   "timestamp": "2024-01-15T11:45:30.000Z",
   "result": {
     "success": true,
@@ -278,7 +278,7 @@ Formulario  Interacción  Compra  Sin actividad
 {
   "orderId": "order-67890",
   "eventType": "client_purchase_completed",
-  "service": "ApiSoftia",
+  "service": "Mnemosyne",
   "timestamp": "2024-01-15T11:45:30.000Z",
   "result": {
     "success": false,
@@ -292,7 +292,7 @@ Formulario  Interacción  Compra  Sin actividad
 
 ### Ejecutar Tests
 ```bash
-# Asegurar que ApiSoftia esté ejecutándose
+# Asegurar que Mnemosyne esté ejecutándose
 npm run dev
 
 # En otra terminal, ejecutar tests
@@ -370,24 +370,24 @@ curl -H "Authorization: Bearer $SOFT_IA_API_KEY" \
 ## Integraciones Relacionadas
 
 ### Hub Central (Puerto 3007)
-- Recibe webhooks desde Graf
+- Recibe webhooks desde Hermes
 - Distribuye a sistemas destino
 - Gestiona confirmaciones y reintentos
 
-### Graf Backend
-- Plugin hubcentral para emisión de webhooks
+### Hermes Backend
+- Plugin nous para emisión de webhooks
 - Triggers en OrderStatus.PAID
 
-### EMW (Puerto 3001)
+### IRIS (Puerto 3001)
 - Notificaciones WhatsApp
 - Eventos relacionados con entregas
 
-### MeraVuelta (Puerto 3006)
+### Talaria (Puerto 3006)
 - Sistema de deliveries
 - Confirmaciones de entrega
 
 ---
 
-**Autor**: Sistema Huamanizar
+**Autor**: Sistema Prizma
 **Fecha**: Enero 2024
 **Versión**: 1.0.0

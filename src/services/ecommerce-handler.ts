@@ -112,20 +112,21 @@ export class EcommerceHandler {
 
   private async findOrCreateClient(email: string, initialStatus: ClientStatus = ClientStatus.PROSPECT) {
     try {
-      const clients = await this.softIAClient.listClients(1, 100);
-      const existingClient = clients.clients.find(c => c.email === email);
-      
+      // Buscar cliente existente por email (usa findClientByEmail que es la API correcta)
+      const existingClient = await this.softIAClient.findClientByEmail(email);
+
       if (existingClient) {
         return existingClient;
       }
 
+      // Crear cliente nuevo si no existe
       const newClient = await this.softIAClient.createClient({
         name: email.split('@')[0],
         email,
         status: initialStatus,
         tags: ['ecommerce-customer'],
       });
-      
+
       return newClient;
     } catch (error) {
       console.error('Error finding or creating client:', error);
